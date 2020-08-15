@@ -340,6 +340,17 @@ vmCvar_t	cg_fovViewmodel;
 vmCvar_t	cg_fovViewmodelAdjust;
 
 vmCvar_t	cg_scaleVehicleSensitivity;
+vmCvar_t	cg_lightningBlockEffect;
+
+//new cvars - Dusty
+/*
+vmCvar_t	cg_lightningBolts;
+vmCvar_t	cg_lightningWideBolts;
+vmCvar_t	cg_pushBlurSpeed;
+vmCvar_t	cg_pushBlurSize;
+vmCvar_t	cg_pullBlurSpeed;
+vmCvar_t	cg_pullBlurSize;
+*/
 
 vmCvar_t	cg_SFXSabers;
 vmCvar_t	cg_SFXSabersGlowSize;
@@ -487,6 +498,7 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_fovViewmodelAdjust, "cg_fovViewmodelAdjust", "1", CVAR_ARCHIVE },
 
 	{ &cg_scaleVehicleSensitivity, "cg_scaleVehicleSensitivity", "1", CVAR_ARCHIVE },
+	{ &cg_lightningBlockEffect, "cg_lightningBlockEffect", "force/lightning", CVAR_ARCHIVE },
 	
 	{ &cg_SFXSabers,	"cg_SFXSabers",	"1", CVAR_ARCHIVE },
 	{ &cg_SFXSabersGlowSize,	"cg_SFXSabersGlowSize",	"1.0", CVAR_ARCHIVE },
@@ -517,7 +529,6 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_trueinvertsaber,	"cg_trueinvertsaber",	"0", CVAR_ARCHIVE},
 	{ &cg_truefov,	"cg_truefov",	"80", CVAR_ARCHIVE},
     { &cg_truebobbing,	"cg_truebobbing",	"1", CVAR_ARCHIVE},
-
 };
 
 static const size_t cvarTableSize = ARRAY_LEN( cvarTable );

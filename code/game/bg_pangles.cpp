@@ -737,6 +737,7 @@ qboolean PM_AdjustAnglesForSaberLock( gentity_t *ent, usercmd_t *ucmd )
 	return qfalse;
 }
 
+extern qboolean NPC_JediClass(int className);
 int G_MinGetUpTime( gentity_t *ent )
 {
 	if ( ent
@@ -771,7 +772,20 @@ int G_MinGetUpTime( gentity_t *ent )
 			return getUpTime;
 		}
 	}
-	return 200;
+	else if (ent->NPC && NPC_JediClass(ent->client->NPC_class))
+	{//you must have Jedi reflexes...
+		int getUpTime = 250;
+		if (ent->NPC->rank > RANK_ENSIGN)
+		{
+			getUpTime *= 2; 
+		}
+		if (g_spskill->integer >= 2) {
+			getUpTime *= 2;
+		} //max 1000
+
+		return getUpTime;
+	}
+	return 200; //200
 }
 
 qboolean PM_AdjustAnglesForKnockdown( gentity_t *ent, usercmd_t *ucmd, qboolean angleClampOnly )

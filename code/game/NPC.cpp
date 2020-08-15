@@ -87,7 +87,110 @@ static bState_t G_CurrentBState( gNPC_t *gNPC );
 
 extern int eventClearTime;
 
+/*
+what is an NPC's preferred weapon to switch to when they pick up a new weapon, or 
+lose their current weapon, assuming they have more than one weapon?
+*/
+int allWeaponOrder[MAX_WEAPONS] =
+{
+	WP_CONCUSSION,
+	WP_ROCKET_LAUNCHER,
+	WP_THERMAL,
+	WP_DEMP2,
+	WP_FLECHETTE,
+	WP_BOWCASTER,
+	WP_REPEATER,
+	WP_NOGHRI_STICK,
+	WP_TUSKEN_STAFF,
+	WP_BLASTER,
+	WP_BLASTER_PISTOL,
+	WP_BRYAR_PISTOL,
+	WP_DISRUPTOR,
+	WP_SABER, //probably a sword and we're probably not a Jedi, so blaster weapons are preferred
+	WP_TUSKEN_STAFF,
+	WP_STUN_BATON,
+	WP_MELEE,
+	WP_NONE,
+	WP_NONE,
+	WP_NONE,
+	WP_NONE,
+	WP_NONE,
+	WP_NONE,
+	WP_NONE,
+	WP_NONE,
+	WP_NONE,
+	WP_NONE,
+	WP_NONE,
+	WP_NONE,
+	WP_NONE,
+	WP_NONE,
+	WP_NONE
+};
+
+qboolean NPC_JediClass(int className) {
+	switch (className) {
+	case CLASS_JEDI:
+	case CLASS_REBORN:
+	case CLASS_SHADOWTROOPER:
+	case CLASS_ALORA:
+	case CLASS_DESANN:
+	case CLASS_LUKE:
+	case CLASS_KYLE:
+	case CLASS_TAVION:
+	case CLASS_MORGANKATARN:
+		return qtrue;
+	default:
+		return qfalse;
+	}
+}
+
+qboolean NPC_JediClassGood(int className) {
+	switch (className) {
+	case CLASS_JEDI:
+	case CLASS_LUKE:
+	case CLASS_KYLE:
+	case CLASS_MORGANKATARN:
+		return qtrue;
+	default:
+		return qfalse;
+	}
+}
+
+qboolean NPC_JediClassNonBoss(int className) {
+	switch (className) {
+	case CLASS_JEDI:
+	case CLASS_REBORN:
+		return qtrue;
+	default:
+		return qfalse;
+	}
+}
+
+qboolean NPC_JediClassSemiBoss(int className) {
+	switch (className) {
+	case CLASS_ALORA:
+	case CLASS_SHADOWTROOPER:
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean NPC_JediClassBoss(int className) {
+	switch (className) {
+	case CLASS_DESANN:
+	case CLASS_LUKE:
+	case CLASS_KYLE:
+	case CLASS_TAVION:
+	case CLASS_MORGANKATARN:
+		return qtrue;
+	default:
+		return qfalse;
+	}
+}
+
 extern void GM_Dying( gentity_t *self );
+
 void CorpsePhysics( gentity_t *self )
 {
 	// run the bot through the server like it was a real client
@@ -1158,8 +1261,7 @@ void NPC_HandleAIFlags (void)
 }
 
 void NPC_AvoidWallsAndCliffs (void)
-{
-/*
+{/*
 	vec3_t	forward, right, testPos, angles, mins;
 	trace_t	trace;
 	float	fwdDist, rtDist;
@@ -1190,7 +1292,7 @@ void NPC_AvoidWallsAndCliffs (void)
 		//  straight into a wall or off	a cliff unless we really wanted to?
 		return;
 	}
-
+	
 	VectorCopy( NPC->mins, mins );
 	mins[2] += STEPSIZE;
 	angles[YAW] = NPC->client->ps.viewangles[YAW];//Add ucmd.angles[YAW]?
@@ -1206,6 +1308,7 @@ void NPC_AvoidWallsAndCliffs (void)
 		ucmd.rightmove = 0;
 		return;
 	}
+	
 
 	VectorCopy(trace.endpos, testPos);
 	testPos[2] -= 128;
@@ -1220,7 +1323,7 @@ void NPC_AvoidWallsAndCliffs (void)
 	ucmd.forwardmove = 0;
 	ucmd.rightmove = 0;
 	return;
-*/
+	*/
 }
 
 void NPC_CheckAttackScript(void)
@@ -1854,7 +1957,7 @@ NPC_RunBehavior
 -------------------------
 */
 extern void NPC_BSEmplaced( void );
-extern qboolean NPC_CheckSurrender( void );
+extern qboolean NPC_CheckSurrender( qboolean noEscape = qfalse );
 extern void NPC_BSRT_Default( void );
 extern void NPC_BSCivilian_Default( int bState );
 extern void NPC_BSSD_Default( void );
@@ -1907,11 +2010,14 @@ void NPC_RunBehavior( int team, int bState )
 	{//jedi
 		NPC_BehaviorSet_Jedi( bState );
 	}
-	else if ( NPC->client->NPC_class == CLASS_REBORN && NPC->client->ps.weapon == WP_MELEE )
+	else if ( (NPC->client->NPC_class == CLASS_REBORN && NPC->client->ps.weapon == WP_MELEE)
+		|| (NPC->client->ps.weapon == WP_MELEE && (NPC->NPC->stats.meleeKicks || NPC->NPC->stats.meleeKatas))) //only jedi AI supports these right now
 	{//force-only reborn
 		NPC_BehaviorSet_Jedi( bState );
 	}
-	else if ( NPC->client->NPC_class == CLASS_BOBAFETT )
+	else if ( NPC->client->NPC_class == CLASS_BOBAFETT
+		|| NPC->client->NPC_class == CLASS_MANDA
+		|| NPC->client->NPC_class == CLASS_COMMANDO)
 	{
 		Boba_Update();
 		if (NPCInfo->surrenderTime)
@@ -2071,6 +2177,7 @@ void NPC_RunBehavior( int team, int bState )
 				else
 				{
 					NPC_BSFlee();
+									
 				}
 				return;
 			}
@@ -2179,6 +2286,8 @@ NPC Behavior state thinking
 
 ===============
 */
+extern qboolean NPC_JediClassGood(int className);
+
 void NPC_ExecuteBState ( gentity_t *self)//, int msec )
 {
 	bState_t	bState;
@@ -2250,9 +2359,10 @@ void NPC_ExecuteBState ( gentity_t *self)//, int msec )
 		}
 		else if ( NPC->client->playerTeam != TEAM_ENEMY //not an enemy
 			&& (NPC->client->playerTeam != TEAM_FREE || (NPC->client->NPC_class == CLASS_TUSKEN && Q_irand( 0, 4 )))//not a rampaging creature or I'm a tusken and I feel generous (temporarily)
-			&& NPC->enemy->NPC
-			&& (NPC->enemy->NPC->surrenderTime > level.time || (NPC->enemy->NPC->scriptFlags&SCF_FORCED_MARCH)) )
-		{//don't shoot someone who's surrendering if you're a good guy
+			&& NPC->enemy->NPC 
+			&& (NPC->enemy->NPC->surrenderTime > level.time || (NPC->enemy->NPC->scriptFlags&SCF_FORCED_MARCH)
+				|| (NPC_JediClassGood(NPC->client->NPC_class) && (NPC->enemy->s.weapon == WP_NONE || (NPC->enemy->s.weapon == WP_MELEE && !NPC->enemy)))))
+		{//don't shoot someone who's surrendering if you're a good guy, especially if you're a Jedi
 			ucmd.buttons &= ~BUTTON_ATTACK;
 			ucmd.buttons &= ~BUTTON_ALT_ATTACK;
 		}
@@ -2313,6 +2423,15 @@ void NPC_ExecuteBState ( gentity_t *self)//, int msec )
 	else
 	{
 		NPC_ApplyRoff();
+	}
+
+	if (NPC->client->playerTeam != TEAM_PLAYER //not an enemy
+		&& NPC_JediClassGood(NPC->client->NPC_class)
+		&& NPC->enemy->NPC
+		&& (NPC->enemy->NPC->surrenderTime > level.time || (NPC->enemy->NPC->scriptFlags&SCF_FORCED_MARCH) || NPC->enemy->s.weapon == WP_NONE || (NPC->enemy->s.weapon == WP_MELEE && !NPC->enemy)))
+	{//redundancy for Jedi because they like to attack anyway
+		ucmd.buttons &= ~BUTTON_ATTACK;
+		ucmd.buttons &= ~BUTTON_ALT_ATTACK;
 	}
 
 	// end of thinking cleanup

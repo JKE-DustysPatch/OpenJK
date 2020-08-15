@@ -57,6 +57,8 @@ static void WP_BowcasterMainFire( gentity_t *ent )
 		{
 			damage = BOWCASTER_NPC_DAMAGE_HARD;
 		}
+
+		damage *= weaponData[WP_BLASTER].npcDmgMult;
 	}
 
 	count = ( level.time - ent->client->ps.weaponChargeTime ) / BOWCASTER_CHARGE_UNIT;
@@ -86,8 +88,7 @@ static void WP_BowcasterMainFire( gentity_t *ent )
 	for ( int i = 0; i < count; i++ )
 	{
 		// create a range of different velocities
-		vel = BOWCASTER_VELOCITY * ( Q_flrand(-1.0f, 1.0f) * BOWCASTER_VEL_RANGE + 1.0f );
-
+		vel = weaponData[WP_BOWCASTER].velocity * (  Q_flrand(-1.0f, 1.0f) * BOWCASTER_VEL_RANGE + 1.0f )
 		vectoangles( forwardVec, angs );
 
 		if ( !(ent->client->ps.forcePowersActive&(1<<FP_SEE))
@@ -144,7 +145,7 @@ static void WP_BowcasterAltFire( gentity_t *ent )
 
 	WP_MissileTargetHint(ent, start, forwardVec);
 
-	gentity_t *missile = CreateMissile( start, forwardVec, BOWCASTER_VELOCITY, 10000, ent, qtrue );
+	gentity_t *missile = CreateMissile(start, forwardVec, weaponData[WP_BOWCASTER].altVelocity, 10000, ent, qtrue);
 
 	missile->classname = "bowcaster_alt_proj";
 	missile->s.weapon = WP_BOWCASTER;
@@ -164,6 +165,8 @@ static void WP_BowcasterAltFire( gentity_t *ent )
 		{
 			damage = BOWCASTER_NPC_DAMAGE_HARD;
 		}
+
+		damage *= weaponData[WP_BLASTER].npcAltDmgMult;
 	}
 
 	VectorSet( missile->maxs, BOWCASTER_SIZE, BOWCASTER_SIZE, BOWCASTER_SIZE );

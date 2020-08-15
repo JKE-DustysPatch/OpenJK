@@ -659,6 +659,7 @@ extern	vmCvar_t		cg_fovViewmodel;
 extern	vmCvar_t		cg_fovViewmodelAdjust;
 
 extern	vmCvar_t		cg_scaleVehicleSensitivity;
+extern	vmCvar_t		cg_lightningBlockEffect;
 
 extern	vmCvar_t		cg_trueguns;
 extern	vmCvar_t		cg_fpls;

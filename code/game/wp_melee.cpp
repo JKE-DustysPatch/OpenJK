@@ -36,7 +36,7 @@ void WP_Melee( gentity_t *ent )
 	gentity_t	*tr_ent;
 	trace_t		tr;
 	vec3_t		mins, maxs, end;
-	int			damage = ent->s.number ? (g_spskill->integer*2)+1 : 3;
+	int			damage = weaponData[WP_MELEE].altDamage;
 	float		range = ent->s.number ? 64 : 32;
 	qboolean	isBobaPlayer = ( !ent->s.number && ent->client->NPC_class == CLASS_BOBAFETT && ent->client->ps.forcePowerDuration[missileStates[BOBA_MISSILE_VIBROBLADE].dummyForcePower]) ? qtrue : qfalse;
 
@@ -60,13 +60,9 @@ void WP_Melee( gentity_t *ent )
 
 	if ( ent->client && !PM_DroidMelee( ent->client->NPC_class ) )
 	{
-		if ( ent->s.number || ent->alt_fire )
+		if (ent->client->ps.torsoAnim == BOTH_MELEE2)
 		{
-			damage *= Q_irand( 2, 3 );
-		}
-		else
-		{
-			damage *= Q_irand( 1, 2 );
+			damage = weaponData[WP_MELEE].damage;
 		}
 	}
 	
@@ -91,13 +87,29 @@ void WP_Melee( gentity_t *ent )
 			G_PlayEffect( G_EffectIndex( "melee/punch_impact" ), tr.endpos, forwardVec );
 		}
 		//G_Sound( tr_ent, G_SoundIndex( va("sound/weapons/melee/punch%d", Q_irand(1, 4)) ) );
-		if ( ent->NPC && (ent->NPC->aiFlags&NPCAI_HEAVY_MELEE) )
+		if ( (ent->NPC && (ent->NPC->aiFlags&NPCAI_HEAVY_MELEE)))
 		{ //4x damage for heavy melee class
-			damage *= 4;
+			damage *= weaponData[WP_MELEE].splashRadius;
+			damage += Q_irand(-1 * weaponData[WP_MELEE].altSplashRadius, weaponData[WP_MELEE].altSplashRadius);
 			dflags &= ~DAMAGE_NO_KNOCKBACK;
 			dflags |= DAMAGE_DISMEMBER;
 		}
 
 		G_Damage( tr_ent, ent, ent, forwardVec, tr.endpos, damage, dflags, MOD_MELEE );
 	}
+}
+
+extern void NPC_ChangeWeapon(gentity_t* ent, int wp);
+void WP_MeleeTime(gentity_t *meleer)
+{ //were going to try melee attacks
+	if (!meleer || !meleer->client || !meleer->s.number)
+	{
+		return;
+	}
+
+	meleer->client->ps.stats[STAT_WEAPONS] |= 1 << WP_MELEE;
+
+	NPC_ChangeWeapon(meleer, WP_MELEE);
+	meleer->s.weapon = WP_MELEE;
+	meleer->NPC->last_ucmd.weapon = WP_MELEE;
 }

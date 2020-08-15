@@ -36,13 +36,14 @@ static void WP_RepeaterMainFire( gentity_t *ent, vec3_t dir )
 {
 	vec3_t	start;
 	int		damage	= weaponData[WP_REPEATER].damage;
+	int		vel = weaponData[WP_REPEATER].velocity;
 
 	VectorCopy( muzzle, start );
 	WP_TraceSetStart( ent, start, vec3_origin, vec3_origin );//make sure our start point isn't on the other side of a wall
 
 	WP_MissileTargetHint(ent, start, dir);
 
-	gentity_t *missile = CreateMissile( start, dir, REPEATER_VELOCITY, 10000, ent );
+	gentity_t *missile = CreateMissile( start, dir, vel, 10000, ent );
 
 	missile->classname = "repeater_proj";
 	missile->s.weapon = WP_REPEATER;
@@ -62,6 +63,8 @@ static void WP_RepeaterMainFire( gentity_t *ent, vec3_t dir )
 		{
 			damage = REPEATER_NPC_DAMAGE_HARD;
 		}
+
+		damage = weaponData[WP_REPEATER].npcDmgMult;
 	}
 	
 	if ( ent->s.weapon == WP_Z6_ROTARY )
@@ -92,6 +95,7 @@ static void WP_RepeaterAltFire( gentity_t *ent )
 {
 	vec3_t	start;
 	int		damage	= weaponData[WP_REPEATER].altDamage;
+	int		vel = weaponData[WP_REPEATER].altVelocity;
 	gentity_t *missile = NULL;
 
 	VectorCopy( muzzle, start );
@@ -104,7 +108,7 @@ static void WP_RepeaterAltFire( gentity_t *ent )
 	else
 	{
 		WP_MissileTargetHint(ent, start, forwardVec);
-		missile = CreateMissile( start, forwardVec, REPEATER_ALT_VELOCITY, 10000, ent, qtrue );
+		missile = CreateMissile( start, forwardVec, vel, 10000, ent, qtrue );
 	}
 
 	missile->classname = "repeater_alt_proj";
@@ -126,6 +130,8 @@ static void WP_RepeaterAltFire( gentity_t *ent )
 		{
 			damage = REPEATER_ALT_NPC_DAMAGE_HARD;
 		}
+
+		weaponData[WP_REPEATER].npcAltDmgMult;
 	}
 
 	VectorSet( missile->maxs, REPEATER_ALT_SIZE, REPEATER_ALT_SIZE, REPEATER_ALT_SIZE );

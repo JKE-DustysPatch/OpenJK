@@ -794,6 +794,12 @@ public:
 	int			inSpaceSuffocation;
 	int			inSpaceIndex;
 
+	//new fields
+	int			saberReactivateTime;	//time after something deactivates a saber for AI to turn it back on
+	int			breakLimit;				//how many defense points
+	int			breakRecoveryTime;		//how long left to recover a defense point
+	int			breakCounter;			//how many defense points have we used/strong attacks have we blocked recently?
+};
 
 	void sg_export(
 		ojk::SavedGameHelper& saved_game) const
@@ -859,6 +865,10 @@ public:
 		saved_game.write<float>(rocketTargetTime);
 		saved_game.write<int32_t>(inSpaceSuffocation);
 		saved_game.write<int32_t>(inSpaceIndex);
+		saved_game.write<int32_t>(saberReactivateTime);
+		saved_game.write<int32_t>(breakLimit);
+		saved_game.write<int32_t>(breakRecoveryTime);
+		saved_game.write<int32_t>(breakCounter);
 	}
 
 	void sg_import(
@@ -924,14 +934,17 @@ public:
 		saved_game.read<float>(rocketLockTime);
 		saved_game.read<float>(rocketTargetTime);
 		saved_game.read<int32_t>(inSpaceSuffocation);
-		saved_game.read<int32_t>(inSpaceIndex);
+		saved_game.read<int32_t>(inSpaceIndex);		
+		saved_game.read<int32_t>(saberReactivateTime);
+		saved_game.read<int32_t>(breakLimit);
+		saved_game.read<int32_t>(breakRecoveryTime);
+		saved_game.read<int32_t>(breakCounter);
 	}
 }; // GClientBase
 
 
 using gclient_t = GClientBase<saberInfo_t>;
 using RetailGClient = GClientBase<saberInfoRetail_t>;
-
 
 #define	MAX_PARMS	16
 #define	MAX_PARM_STRING_LENGTH	MAX_QPATH//was 16, had to lengthen it so they could take a valid file path
@@ -1126,6 +1139,7 @@ Ghoul2 Insert End
 	int			pushDebounceTime;
 	int			aimDebounceTime;
 	int			useDebounceTime;
+	
 
 //Unions for miscellaneous fields used under very specific circumstances
 	union

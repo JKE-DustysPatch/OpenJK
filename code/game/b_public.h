@@ -157,7 +157,14 @@ public:
 	//sex
 	sexType_t	sex;			//male, female, etc.
 
-
+	//new fields
+	qboolean	altFire;		//NPC ONLY: forces to use altFire always, allows NPC to remember its native firing mode
+	qboolean	restrictJediPowers; //NPC ONLY: keeps from *ever* using dodge and push abilities without possessing those force powers
+	int		meleeKicks;		//use kicks with WP_MELEE? If 1-5 controls frequency
+	int		meleeKatas;		//use melee katas with WP_MELEE? If 1-5 controls frequency
+	int		saberMeleeKatas; //NPC ONLY: use melee katas with WP_SABER? kyle_boss ignores this
+	qboolean	rareFire;		
+	
 	void sg_export(
 		ojk::SavedGameHelper& saved_game) const
 	{
@@ -179,6 +186,12 @@ public:
 		saved_game.write<int32_t>(health);
 		saved_game.write<int32_t>(acceleration);
 		saved_game.write<int32_t>(sex);
+		saved_game.write<int32_t>(altFire);
+		saved_game.write<int32_t>(restrictJediPowers);
+		saved_game.write<int32_t>(meleeKicks);
+		saved_game.write<int32_t>(meleeKatas);
+		saved_game.write<int32_t>(saberMeleeKatas);
+		saved_game.write<int32_t>(rareFire);
 	}
 
 	void sg_import(
@@ -202,9 +215,14 @@ public:
 		saved_game.read<int32_t>(health);
 		saved_game.read<int32_t>(acceleration);
 		saved_game.read<int32_t>(sex);
+		saved_game.read<int32_t>(altFire);
+		saved_game.read<int32_t>(restrictJediPowers);
+		saved_game.read<int32_t>(meleeKicks);
+		saved_game.read<int32_t>(meleeKatas);
+		saved_game.read<int32_t>(saberMeleeKatas);
+		saved_game.read<int32_t>(rareFire);
 	}
 }; // gNPCstats_t
-
 
 #define	MAX_ENEMY_POS_LAG	2400
 #define	ENEMY_POS_LAG_INTERVAL	100
@@ -384,7 +402,6 @@ public:
 	int			ffireCount;		//sigh... you'd think I'd be able to find a way to do this without having to use 3 int fields, but...
 	int			ffireDebounce;
 	int			ffireFadeDebounce;
-
 
 	void sg_export(
 		ojk::SavedGameHelper& saved_game) const
@@ -634,7 +651,6 @@ public:
 		saved_game.read<int32_t>(ffireFadeDebounce);
 	}
 }; // gNPC_t
-
 
 void G_SquadPathsInit(void);
 void NPC_InitGame( void );

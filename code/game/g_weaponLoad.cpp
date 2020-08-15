@@ -25,6 +25,9 @@ along with this program; if not, see <http://www.gnu.org/licenses/>.
 
 // this is excluded from PCH usage 'cos it looks kinda scary to me, being game and ui.... -Ste
 #include "g_local.h"
+//extern float forceJumpHeight[];
+//extern cvar_t *g_weaponVelocity;
+//extern cvar_t *g_weaponAltVelocity;
 
 typedef struct {
 	const char	*name;
@@ -227,6 +230,11 @@ void WPN_SplashDamage(const char **holdBuf);
 void WPN_SplashRadius(const char **holdBuf);
 void WPN_AltSplashDamage(const char **holdBuf);
 void WPN_AltSplashRadius(const char **holdBuf);
+void WPN_Velocity(const char **holdBuf);
+void WPN_AltVelocity(const char **holdBuf);
+void WPN_NPCDmgMult(const char **holdBuf);
+void WPN_NPCDmgAltMult(const char **holdBuf);
+
 
 void WPN_WorldModel(const char **holdBuf);
 void WPN_NoHandModel(const char **holdBuf);
@@ -258,7 +266,7 @@ const int defaultDamage[] = {
 	FLECHETTE_MINE_DAMAGE,		// WP_DET_PACK			// HACK, this is what the code sez.
 	CONC_DAMAGE,				// WP_CONCUSSION
 
-	0,							// WP_MELEE				// handled by the melee attack function
+	RIGHT_PUNCH_DAMAGE,			// WP_MELEE				//right punch damage
 
 	ATST_MAIN_DAMAGE,			// WP_ATST_MAIN
 	ATST_SIDE_MAIN_DAMAGE,		// WP_ATST_SIDE
@@ -301,7 +309,7 @@ const int defaultAltDamage[] = {
 	FLECHETTE_MINE_DAMAGE,	// WP_DET_PACK				// HACK, this is what the code sez.
 	CONC_ALT_DAMAGE,		// WP_CONCUSION
 
-	0,						// WP_MELEE					// handled by the melee attack function
+	LEFT_PUNCH_DAMAGE,						// WP_MELEE					// handled by the melee attack function
 
 	ATST_MAIN_DAMAGE,		// WP_ATST_MAIN
 	ATST_SIDE_ALT_DAMAGE,	// WP_ATST_SIDE
@@ -344,7 +352,7 @@ const int defaultSplashDamage[] = {
 	FLECHETTE_MINE_SPLASH_DAMAGE,	// WP_DET_PACK		// HACK, this is what the code sez.
 	CONC_SPLASH_DAMAGE,				// WP_CONCUSSION
 
-	0,								// WP_MELEE
+	KICK_DAMAGE,					// WP_MELEE
 
 	0,								// WP_ATST_MAIN
 	ATST_SIDE_MAIN_SPLASH_DAMAGE,	// WP_ATST_SIDE
@@ -387,7 +395,7 @@ const float defaultSplashRadius[] = {
 	FLECHETTE_MINE_SPLASH_RADIUS,	// WP_DET_PACK		// HACK, this is what the code sez.
 	CONC_SPLASH_RADIUS,				// WP_CONCUSSION
 
-	0.0f,							// WP_MELEE
+	HEAVY_MELEE_MULT,				// WP_MELEE
 
 	0.0f,							// WP_ATST_MAIN
 	ATST_SIDE_MAIN_SPLASH_RADIUS,	// WP_ATST_SIDE
@@ -430,7 +438,7 @@ const int defaultAltSplashDamage[] = {
 	FLECHETTE_MINE_SPLASH_DAMAGE,	// WP_DET_PACK		// HACK, this is what the code sez.
 	0,								// WP_CONCUSSION
 
-	0,								// WP_MELEE			// handled by the melee attack function
+	SPECIAL_KICK_DAMAGE,			// WP_MELEE			
 
 	0,								// WP_ATST_MAIN
 	ATST_SIDE_ALT_SPLASH_DAMAGE,	// WP_ATST_SIDE
@@ -473,7 +481,7 @@ const float defaultAltSplashRadius[] = {
 	FLECHETTE_ALT_SPLASH_RAD,		// WP_DET_PACK		// HACK, this is what the code sez.
 	0.0f,							// WP_CONCUSSION
 
-	0.0f,							// WP_MELEE			// handled by the melee attack function
+	0.0f,							// WP_MELEE
 
 	0.0f,							// WP_ATST_MAIN
 	ATST_SIDE_ALT_SPLASH_RADIUS,	// WP_ATST_SIDE
@@ -500,7 +508,74 @@ const float defaultAltSplashRadius[] = {
 	0.0f,							// WP_Z6_ROTARY,
 };
 
-wpnParms_t WpnParms[] =
+const int defaultVelocity[WP_NUM_WEAPONS] =
+{
+	0,//WP_NONE,
+	0,//WP_SABER,				 // NOTE: lots of code assumes this is the first weapon (... which is crap) so be careful -Ste.
+	BRYAR_PISTOL_VEL,//WP_BLASTER_PISTOL,
+	BLASTER_VELOCITY,//WP_BLASTER,
+	Q3_INFINITE,//WP_DISRUPTOR,
+	BOWCASTER_VELOCITY,//WP_BOWCASTER,
+	REPEATER_VELOCITY,//WP_REPEATER,
+	DEMP2_VELOCITY, //WP_DEMP2,
+	FLECHETTE_VEL,//WP_FLECHETTE,
+	ROCKET_VELOCITY,//WP_ROCKET_LAUNCHER,
+	TD_VELOCITY,//WP_THERMAL,
+	0,//WP_TRIP_MINE,
+	0,//WP_DET_PACK,
+	CONC_VELOCITY,//WP_CONCUSSION,
+	KICK_DAMAGE_RANDOMNESS,//WP_MELEE,			// Any ol' melee attack
+	0,//WP_STUN_BATON,
+	BRYAR_PISTOL_VEL,//WP_BRYAR_PISTOL,
+	EMPLACED_VEL,//WP_EMPLACED_GUN,
+	BRYAR_PISTOL_VEL,//WP_BOT_LASER,		// Probe droid	- Laser blast
+	0,//WP_TURRET,			// turret guns 
+	ATST_MAIN_VEL,//WP_ATST_MAIN,
+	ATST_SIDE_MAIN_VELOCITY,//WP_ATST_SIDE,
+	EMPLACED_VEL,//WP_TIE_FIGHTER,
+	EMPLACED_VEL,//WP_RAPID_FIRE_CONC,
+	0,//WP_JAWA,
+	TUSKEN_RIFLE_VEL,//WP_TUSKEN_RIFLE,
+	0,//WP_TUSKEN_STAFF,
+	0,//WP_SCEPTER,
+	0,//WP_NOGHRI_STICK,
+};
+
+const int defaultAltVelocity[WP_NUM_WEAPONS] =
+{
+	0,//WP_NONE,
+	0,//WP_SABER,				 // NOTE: lots of code assumes this is the first weapon (... which is crap) so be careful -Ste.
+	BRYAR_PISTOL_VEL,//WP_BLASTER_PISTOL,
+	BLASTER_VELOCITY,//WP_BLASTER,
+	Q3_INFINITE,//WP_DISRUPTOR,
+	BOWCASTER_VELOCITY,//WP_BOWCASTER,
+	REPEATER_ALT_VELOCITY,//WP_REPEATER,
+	DEMP2_ALT_RANGE,//WP_DEMP2,
+	FLECHETTE_MINE_VEL,//WP_FLECHETTE,
+	ROCKET_ALT_VELOCITY,//WP_ROCKET_LAUNCHER,
+	TD_ALT_VELOCITY,//WP_THERMAL,
+	0,//WP_TRIP_MINE,
+	0,//WP_DET_PACK,
+	Q3_INFINITE,//WP_CONCUSSION,
+	HEAVY_MELEE_RANDOMNESS,//WP_MELEE,			// Any ol' melee attack
+	0,//WP_STUN_BATON,
+	BRYAR_PISTOL_VEL,//WP_BRYAR_PISTOL,
+	EMPLACED_VEL,//WP_EMPLACED_GUN,
+	BRYAR_PISTOL_VEL,//WP_BOT_LASER,		// Probe droid	- Laser blast
+	0,//WP_TURRET,			// turret guns 
+	ATST_MAIN_VEL,//WP_ATST_MAIN,
+	ATST_SIDE_ALT_NPC_VELOCITY,//WP_ATST_SIDE,
+	EMPLACED_VEL,//WP_TIE_FIGHTER,
+	REPEATER_ALT_VELOCITY,//WP_RAPID_FIRE_CONC,
+	0,//WP_JAWA,
+	TUSKEN_RIFLE_VEL,//WP_TUSKEN_RIFLE,
+	0,//WP_TUSKEN_STAFF,
+	0,//WP_SCEPTER,
+	0,//WP_NOGHRI_STICK,
+};
+
+
+wpnParms_t WpnParms[] = 
 {
 	{ "ammo",				WPN_Ammo },	//ammo
 	{ "ammoicon",			WPN_AmmoIcon },
@@ -547,7 +622,8 @@ wpnParms_t WpnParms[] =
 	{ "splashRadius",		WPN_SplashRadius },
 	{ "altSplashDamage",	WPN_AltSplashDamage },
 	{ "altSplashRadius",	WPN_AltSplashRadius },
-	
+	{ "velocity", WPN_Velocity },
+	{ "altVelocity", WPN_AltVelocity },
 	{ "noHandModel",		WPN_NoHandModel },
 	{ "skinFile",			WPN_SkinFile },
 	{ "worldModel",			WPN_WorldModel },
@@ -1578,6 +1654,19 @@ void WPN_AltSplashRadius(const char **holdBuf)
 
 //--------------------------------------------
 
+void WPN_Velocity(const char **holdBuf)
+{
+	float	tokenFlt;
+
+	if( COM_ParseInt(holdBuf,&tokenInt))
+	{
+		SkipRestOfLine(holdBuf);
+		return;
+	}
+    
+  weaponData[wpnParms.weaponNum].velocity = tokenFlt;
+}
+
 void WPN_NoHandModel(const char **holdBuf)
 {
 	int		tokenInt;
@@ -1592,6 +1681,19 @@ void WPN_NoHandModel(const char **holdBuf)
 }
 
 //--------------------------------------------
+
+void WPN_AltVelocity(const char **holdBuf)
+{
+	float	tokenFlt;
+
+	if (COM_ParseFloat(holdBuf, &tokenFlt))
+	{
+		SkipRestOfLine(holdBuf);
+		return;
+	}
+
+	weaponData[wpnParms.weaponNum].altVelocity = tokenFlt;
+}
 
 void WPN_SkinFile(const char **holdBuf)
 {
@@ -1663,9 +1765,15 @@ void WP_LoadWeaponParms (void)
 		weaponData[i].altSplashDamage = defaultAltSplashDamage[i];
 		weaponData[i].splashRadius = defaultSplashRadius[i];
 		weaponData[i].altSplashRadius = defaultAltSplashRadius[i];
+		weaponData[i].velocity = defaultVelocity[i];
+		weaponData[i].altVelocity = defaultAltVelocity[i];
+		weaponData[i].npcDmgMult = 1.0;
+		weaponData[i].npcAltDmgMult = 1.0;
+		weaponData[i].npcFireTimeMult = 1.0; //npc combat function checks for this
+		weaponData[i].npcAltFireTimeMult = 1.0; //npc combat function checks for this
 	}
 
-	WP_ParseParms(buffer);
+	WP_ParseParms(buffer);	
 
 	gi.FS_FreeFile( buffer );	//let go of the buffer
 }
